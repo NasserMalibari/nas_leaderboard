@@ -4,7 +4,6 @@ from rest_framework import status
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import Competition, Participant, Match
-from .serializers import CompetitionSerializer
 from django.utils import timezone
 
 User = get_user_model()
