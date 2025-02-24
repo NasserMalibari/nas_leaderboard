@@ -77,6 +77,29 @@ def update_delete_participants(request, competition_id, participant_id):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         raise PermissionDenied("You are not authorized to update participants")               
 
+@api_view(['PUT', 'DELETE'])
+@permission_classes([IsAuthenticated])
+def update_delete_competition(request, competition_id):
+    try:
+        competition = Competition.objects.get(id=competition_id)
+    except Competition.DoesNotExist:
+        raise NotFound('Competition not found.')
+    
+    if request.method == "PUT":
+        if request.user == competition.created_by:
+            serializer = CompetitionSerializer(competition, data=request.data, partial=True)  # Allow partial updates
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=201)
+            return Response(serializer.errors, status=400)
+
+        raise PermissionDenied("You are not authorized to update competitions")  
+
+    elif request.method == "DELETE":
+        if request.user == competition.created_by:
+            competition.delete()
+            return Response(status=status.HTTP_202_ACCEPTED)
+        raise PermissionDenied("You are not authorized to delete competitions")  
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])

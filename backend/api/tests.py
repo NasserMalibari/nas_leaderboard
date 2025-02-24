@@ -483,3 +483,53 @@ class UpdateDeleteParticipants(APITestCase):
         resp = self.client2.put(url, data=data, format='json')
 
         self.assertEqual(resp.status_code, 403)
+
+class UpdateDeleteCompetitions(APITestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(username='user1', password='testpass123')
+        self.user2 = User.objects.create_user(username='user2', password='testpass123')
+        self.user3 = User.objects.create_user(username='user3', password='testpass123')
+
+        # Generate JWT token for the user
+        refresh = RefreshToken.for_user(self.user1)
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+
+        refresh2 = RefreshToken.for_user(self.user2)
+        self.client2 = APIClient()
+        self.client2.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh2.access_token}')
+
+        # create some competitions
+        self.comp1 = Competition.objects.create(name='Competition 1', created_by=self.user1)
+        self.comp2 = Competition.objects.create(name='Competition 2', created_by=self.user2)
+
+        # create some participants
+        self.part1_1 = Participant.objects.create(user=self.user1, competition=self.comp1)
+        self.part2_1 = Participant.objects.create(user=self.user2, competition=self.comp1)
+        self.part3_1 = Participant.objects.create(user=self.user3, competition=self.comp1)
+        self.part3_2 = Participant.objects.create(user=self.user3, competition=self.comp2)
+    
+
+    def test_delete_competition(self):
+        url = '/api/competitions/1/'
+        resp = self.client.delete(url)
+        self.assertEqual(resp.status_code, status.HTTP_202_ACCEPTED)
+
+    def test_delete_competition_non_owner(self):
+        url = '/api/competitions/1/'
+        resp = self.client2.delete(url)
+        self.assertEqual(resp.status_code, 403)
+
+    def test_competition_update(self):
+        url = '/api/competitions/1/'
+        data = {'title': 'new name'}
+        resp = self.client.put(url, data=data)
+        self.assertEqual(resp.status_code, 201)
+
+    def test_competition_update_non_owner(self):
+        url = '/api/competitions/1/'
+        data = {'title': 'new name'}
+        resp = self.client2.put(url, data=data)
+        self.assertEqual(resp.status_code, 403)
+
+
