@@ -39,7 +39,7 @@ class ParticipantSerializer(serializers.ModelSerializer):
 class MatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Match
-        fields = ['id', 'competition', 'participant1', 'participant2', 'winner', 'played_at']
+        fields = ['id', 'competition', 'participant1', 'participant2', 'winner', 'played_at', 'participant1_elo_change', 'participant2_elo_change']
         read_only_fields = ['competition']
 
     def validate(self, data):

@@ -278,8 +278,14 @@ class UpdateMatchTests(APITestCase):
         url = '/api/competitions/1/participants/'
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
-        print(response.data)
 
+
+        # check elo has increased for 1 and decreased for 2
+        p1 = Participant.objects.get(user=1)
+        self.assertGreater(p1.elo_rating, 1200)
+
+        p2 = Participant.objects.get(user=2)
+        self.assertLess(p2.elo_rating, 1200)
 
     def test_delete(self):
         url = '/api/competitions/1/matches/1/'
@@ -314,5 +320,107 @@ class UpdateMatchTests(APITestCase):
 
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+
+    def test_change_winner(self):
+        url = '/api/competitions/1/matches/1/'
+        data = {'winner': "1"}
+
+        self.client.put(url, data, format='json')
+
+        data = {'winner': "2"}
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        # check elo calcs were reversed
+        p1 = Participant.objects.get(user=1)
+        self.assertLess(p1.elo_rating, 1200)
+
+        p2 = Participant.objects.get(user=2)
+        self.assertGreater(p2.elo_rating, 1200)
+
+        # now change to draw
+        data = {'winner': "draw"}
+        response = self.client.put(url, data, format='json')
+        self.assertEqual(response.status_code, 200)
+
+        # check elo calcs were reversed
+        p1 = Participant.objects.get(user=1)
+        self.assertEqual(p1.elo_rating, 1200)
+
+        p2 = Participant.objects.get(user=2)
+        self.assertEqual(p2.elo_rating, 1200)
+        # print(p1.elo_rating, p2.elo_rating)
     
+class ParticipantStatsTests(APITestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user(username='testuser', password='testpass123')
+        self.user2 = User.objects.create_user(username='otheruser', password='testpass123')
+        self.user3 = User.objects.create_user(username='user3', password='testpass123')
+
+        # Generate JWT token for the user
+        refresh = RefreshToken.for_user(self.user1)
+        self.client = APIClient()
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh.access_token}')
+
+
+        refresh2 = RefreshToken.for_user(self.user2)
+        self.client2 = APIClient()
+        self.client2.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh2.access_token}')
+
+        refresh3 = RefreshToken.for_user(self.user3)
+        self.client3 = APIClient()
+        self.client3.credentials(HTTP_AUTHORIZATION=f'Bearer {refresh3.access_token}')
+
+        # Create some competitions for testing
+        self.comp1 = Competition.objects.create(name='Competition 1', created_by=self.user1)
+
+        self.part1_1 = Participant.objects.create(user=self.user1, competition=self.comp1)
+        self.part2_1 = Participant.objects.create(user=self.user2, competition=self.comp1)
+
+
+    def test_stats_created(self):
+        url = '/api/competitions/1/stats/1/'
+
+        # stats wasnt specifically invoked, but should be created automatically when 
+        # participants are created
+        resp = self.client.get(url)
+
+        self.assertEqual(resp.status_code, 200)
     
+    def test_stats_detail_diff_user(self):
+        """
+            Different users in comp should see others' stats
+        """
+        url = '/api/competitions/1/stats/1/'
+
+        resp = self.client2.get(url)
+
+        self.assertEqual(resp.status_code, 200)
+
+    def test_stats_detail_not_in_comp(self):
+        """
+            Permission denied for users not in the competition
+        """
+        url = '/api/competitions/1/stats/1/'
+
+        resp = self.client3.get(url)
+
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_matches_updates_stats(self):
+        # create matches 
+        played_at = timezone.make_aware(timezone.datetime(2023, 10, 1, 14, 0, 0))
+        # set up matches
+        Match.objects.create(competition=self.comp1, participant1=self.part1_1, participant2=self.part2_1,
+                             played_at=played_at)
+        
+        self.client.put('/api/competitions/1/matches/1/', {'winner': "1"}, format='json')
+
+        url = '/api/competitions/1/stats/1/'
+        resp = self.client.get(url)
+        self.assertEqual(resp.data['matches_played'], 1)
+        self.assertEqual(resp.data['wins'], 1)
+
+
+
+

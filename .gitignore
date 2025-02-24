@@ -1,1 +1,3 @@
 backend/backend/settings.py
+backend/backend/__pycache__/
+backend/api/__pycache__

@@ -1,8 +1,8 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from api.models import Competition, Match, Participant
-from .serializers import CompetitionSerializer, MatchSerializer, ParticipantSerializer
+from api.models import Competition, Match, Participant, ParticipantStats
+from .serializers import CompetitionSerializer, MatchSerializer, ParticipantSerializer, ParticipantStatsSerializer
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.db import IntegrityError
@@ -104,6 +104,28 @@ def update_delete_detail_match(request, competition_id, match_id):
         raise PermissionDenied("Only the owner of a competition can delete matches") 
 
 
+@api_view(['GET', 'PUT'])
+@permission_classes([IsAuthenticated])
+def get_stats_detail(request, id, competition_id):
+
+    # check requester is in competition or owner
+    if is_participant_or_owner(request.user, competition_id):
+        stats = get_object_or_404(ParticipantStats, id=id)
+        serializer = ParticipantStatsSerializer(stats)
+        # print(stats.data)    
+        return Response(serializer.data, 200)
+    raise PermissionDenied("You are not in the competition of this participant")
+
+
+
+
+
+
+def is_participant_or_owner(request_id, competition_id):
+    is_participant = Participant.objects.filter(user=request_id, competition=competition_id).exists()
+    competition = get_object_or_404(Competition, id=competition_id)
+
+    return is_participant or competition.created_by == request_id
 
 # match = Match.objects.all().filter(id=)
 # @api_view(['GET', 'POST'])
