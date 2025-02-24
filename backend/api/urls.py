@@ -7,5 +7,7 @@ urlpatterns = [
     path('competitions/<int:competition_id>/participants/', list_create_participants, name='participant-list-create'),
     path('competitions/<int:competition_id>/matches/', views.list_create_matches, name='matches'),
     path('competitions/<int:competition_id>/matches/<int:match_id>/', views.update_delete_detail_match, name='update_delete_detail_match'),
-    path('competitions/<int:competition_id>/stats/<int:id>/', views.get_stats_detail, name='stats_details')
+    path('competitions/<int:competition_id>/stats/<int:id>/', views.get_stats_detail, name='stats_details'),
+    path('competitions/<int:competition_id>/participants/<int:participant_id>/', views.update_delete_participants, name="update_delete_participants")
 ]
+

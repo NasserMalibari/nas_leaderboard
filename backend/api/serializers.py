@@ -74,25 +74,3 @@ class ParticipantStatsSerializer(serializers.ModelSerializer):
         model = ParticipantStats
         fields = ['id', 'matches_played', 'wins', 'losses', 'draws', 'peak_elo']
 
-
-# class MatchSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = Match
-#         fields = ['id', 'competition', 'participant1', 'participant2', 'winner', 'played_at']
-#         read_only_fields = ['id']
-    
-#     def validate(self, data):
-#         """
-#         Custom validation to ensure:
-#         - participant1 and participant2 are not the same.
-#         - winner is either participant1 or participant2.
-#         """
-#         participant1 = data.get('participant1')
-#         participant2 = data.get('participant2')
-#         winner = data.get('winner')
-
-#         if participant1 == participant2:
-#             raise serializers.ValidationError("Participant 1 and Participant 2 cannot be the same.")
-
-#         if winner and winner not in [participant1, participant2]:
-#             raise serializers.ValidationError("The winner must be either Participant 1 or Participant 2.")

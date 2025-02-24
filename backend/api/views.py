@@ -49,6 +49,35 @@ def list_create_participants(request, competition_id):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(["PUT", "DELETE"])
+def update_delete_participants(request, competition_id, participant_id):
+    try:
+        competition = Competition.objects.get(id=competition_id)
+    except Competition.DoesNotExist:
+        raise NotFound('Competition not found.')
+    
+
+    if request.method == "DELETE":
+
+        participant = Participant.objects.get(user=request.user, competition=competition_id)
+        if request.user == competition.created_by or participant.id == participant_id:
+            participant = Participant.objects.get(id=participant_id)
+            participant.delete()
+            return Response(status=status.HTTP_202_ACCEPTED)
+        else:
+            raise PermissionDenied("Only the owner or the user themselves can leave a competition.")
+
+    elif request.method == "PUT":
+        if request.user == competition.created_by:
+            participant = Participant.objects.get(id=participant_id)
+            serializer = ParticipantSerializer(participant, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        raise PermissionDenied("You are not authorized to update participants")               
+
+
 @api_view(['GET', 'POST'])
 @permission_classes([IsAuthenticated])
 def list_create_matches(request, competition_id):
@@ -112,13 +141,8 @@ def get_stats_detail(request, id, competition_id):
     if is_participant_or_owner(request.user, competition_id):
         stats = get_object_or_404(ParticipantStats, id=id)
         serializer = ParticipantStatsSerializer(stats)
-        # print(stats.data)    
         return Response(serializer.data, 200)
     raise PermissionDenied("You are not in the competition of this participant")
-
-
-
-
 
 
 def is_participant_or_owner(request_id, competition_id):
