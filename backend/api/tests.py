@@ -29,7 +29,7 @@ class CompetitionTests(APITestCase):
         """
         Ensure we can list competitions created by the authenticated user.
         """
-        url = reverse('list-create-competition')
+        url = reverse('list_create_competition')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)  # Only 2 competitions belong to the authenticated user
@@ -38,7 +38,7 @@ class CompetitionTests(APITestCase):
         """
         Ensure we can create a new competition.
         """
-        url = reverse('list-create-competition')
+        url = reverse('list_create_competition')
         data = {'name': 'New Competition'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -50,7 +50,7 @@ class CompetitionTests(APITestCase):
         Ensure that unauthenticated users cannot create competitions.
         """
         self.client.credentials()  # Remove authentication
-        url = reverse('list-create-competition')
+        url = reverse('list_create_competition')
         data = {'name': 'New Competition'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -60,7 +60,7 @@ class CompetitionTests(APITestCase):
         Ensure that unauthenticated users cannot list competitions.
         """
         self.client.credentials()  # Remove authentication
-        url = reverse('list-create-competition')
+        url = reverse('list_create_competition')
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -68,7 +68,7 @@ class CompetitionTests(APITestCase):
         """
         Ensure that competitions cannot be created with invalid data.
         """
-        url = reverse('list-create-competition')
+        url = reverse('list_create_competition')
         data = {'name': ''}  # Invalid data
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -98,7 +98,7 @@ class ParticipantTests(APITestCase):
         """
         Ensure participants can be listed for a specific competition.
         """
-        url = reverse('participant-list-create', args=[self.competition.id])
+        url = reverse('participant_list_create', args=[self.competition.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 2)  # Two participants were created in setUp
@@ -107,7 +107,7 @@ class ParticipantTests(APITestCase):
         """
         Ensure a participant can be added to a competition.
         """
-        url = reverse('participant-list-create', args=[self.competition.id])
+        url = reverse('participant_list_create', args=[self.competition.id])
         data = {'username': 'user3'}
         response = self.client.post(url, data, format='json')
         # print(response.data)
@@ -124,7 +124,7 @@ class ParticipantTests(APITestCase):
         """
         Ensure adding a participant with a non-existent username fails.
         """
-        url = reverse('participant-list-create', args=[self.competition.id])
+        url = reverse('participant_list_create', args=[self.competition.id])
         data = {'username': 'nonexistentuser'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -135,7 +135,7 @@ class ParticipantTests(APITestCase):
         Ensure unauthenticated users cannot add participants.
         """
         self.client.credentials()  # Remove authentication
-        url = reverse('participant-list-create', args=[self.competition.id])
+        url = reverse('participant_list_create', args=[self.competition.id])
         data = {'username': 'user2'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
@@ -145,7 +145,7 @@ class ParticipantTests(APITestCase):
         Ensure unauthenticated users cannot list participants.
         """
         self.client.credentials()  # Remove authentication
-        url = reverse('participant-list-create', args=[self.competition.id])
+        url = reverse('participant_list_create', args=[self.competition.id])
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
@@ -154,7 +154,7 @@ class ParticipantTests(APITestCase):
         Ensure adding a participant to a non-existent competition fails.
         """
         nonexistent_competition_id = 999  # Assuming no competition with this ID exists
-        url = reverse('participant-list-create', args=[nonexistent_competition_id])
+        url = reverse('participant_list_create', args=[nonexistent_competition_id])
         data = {'username': 'user2'}
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
